@@ -26,3 +26,11 @@
 *.exe
 *.out
 *.app
+
+# Latex Temp files
+*.aux
+*.log
+*.gz
+*.fmt
+*.el
+*~

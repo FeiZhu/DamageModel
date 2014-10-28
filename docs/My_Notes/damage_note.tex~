@@ -1,0 +1,320 @@
+\documentclass[11pt,fullpage]{article}
+%\usepackage{multicol,wrapfig,amsmath,subfigure}
+\usepackage{multicol,amsmath,amssymb,algorithmic,bm}
+\usepackage{graphics,graphicx}
+\usepackage[right = 2.5cm, left=2.5cm, top = 2.5cm, bottom =2.5cm]{geometry}
+\pagestyle{plain}
+\def\urlfont{\DeclareFontFamily{OT1}{cmtt}{\hyphenchar\font='057}
+              \normalfont\ttfamily \hyphenpenalty=10000}
+
+%\input macros
+
+\newcommand{\subheading}[1]{\noindent \textbf{#1}}
+\newcommand{\grad}{\nabla}
+\newcommand{\jump}[1]{[#1]}
+\newcommand{\limit}[2]{\lim_{#1 \rightarrow #2}}
+\newcommand{\mb}[1]{\mathbf{#1}}
+\newcommand{\reals}[1]{\mathbb{R}^{#1}}
+
+
+\begin{document}
+\noindent
+\begin{center}
+{\bf\large  Numerical Homogenization Note}
+{\\ Fei Zhu \\ 05/23/2014}
+\end{center}
+
+\section{Introduction}
+
+This note states my current understanding of ``Numerical
+Homogenization''. It aims to organize my thoughts in preparation for
+further progress of this project. This note has relaxed terminology. 
+
+\section{Problem Description}
+
+We aim to simulate the deformation of heterogeneous(inhomogeneous) materials,
+i.e. objects made of different materials. The direct(naive) solution
+is to discretize the object at a fine scale that is comparable with
+the material distribution of the object. For instance, in FEM case the object is
+discretized into fine elements with element-wise material
+properties. Computation at the fine scale is too expensive
+because the number of elements is huge. It would be exciting if the
+simulation could be conducted at a much coarser level. However, direct computation at the
+coarse scale is delicate due to the lack of relevant analytical
+constitutive laws at this scale. Hence, the problem of homogenization
+is defined as: \emph{Given a fine scale description of an
+  inhomogeneous object, derive a coarse approximation that possesses a
+similar physical behavior.} More specifically, the material property
+of each coarse element is a homogenized approximation of its fine
+scale counterparts. The goal of homogenization is to determine the
+material property for each coarse element. For \textbf{linear materials}, it is
+the elasticity tensor $\mb{C}$ that relates the stress $\mb{\sigma}$
+and strain $\mb{\epsilon}$: $\mb{\sigma}=\mb{C}:\mb{\epsilon}$. For
+\textbf{nonlinear materials}, we need to  first propose a general form of constitutive
+model for nonlinear anisotropic materials and determine the
+material parameters in the constitutive model through the
+homogenization process. The homogenization of nonlinear materials is
+the goal of this project.
+
+\section{Homogenization in Engineering}
+
+Homogenization is a classical problem in engineering
+community. It is not uncommon that new materials are created from
+existing materials for the tailored behavior, composites for instance. In the process of
+designing new materials, one would like to make predictions of the new
+material by numerical simulations to reduce laboratory
+expenses. However, the new material is inhomogeneous and its
+macroscopic property is not available. It depends on the properties of all the
+base materials and the microstructure. It's a complicated problem to
+derive the \emph{effective macroscopic material property} from
+properties of the base materials, \cite{Zohdi:2004} presents a
+detailed introduction.
+
+As always, linear elasticity is better studied than nonlinear
+elasticity. Methods in engineering usually characterize the (homogenized)
+effective macroscopic property as a relation between averages over a
+statistically representative sample of material:
+$$
+<\bm{\sigma}>_{\Omega}=\mb{C}:<\bm{\epsilon}>_{\Omega}
+$$
+
+where
+$$
+<\cdot>_{\Omega}\stackrel{def}{=}\frac{1}{|\Omega|}\int_\Omega\cdot d\Omega
+$$
+
+The representative sample volume of material is referred to in the
+literature as a \emph{representative volume element} (RVE).
+
+For the relation between averages to be useful, it must have a clear
+physical meaning. A commonly accepted macro/micro criteria used in
+effective property calculation is the so-called Hill's condition:
+$$
+<\bm{\sigma}:\bm{\epsilon}>_\Omega=<\bm{\sigma}>_\Omega:<\bm{\epsilon}>_\Omega
+$$
+
+The process of determining $\mb{C}$ is as follows:
+\begin{enumerate}
+\item{Apply specific loads that satisfy Hill's condition to the
+    material, compute the stress response.}
+\item{Average the stress and strain in each RVE, compute $\bm{C}$.}
+\end{enumerate}
+
+It is in fact much more complicated than the process introduced
+above. For instance, it involves the determination of a proper RVE
+size. Besides, not all loadings satisfy Hill's condition. Two
+physically important ones are:
+\begin{enumerate}
+\item{pure linear displacements of the form:
+$$
+\textbf{u}|_{\partial\Omega}=\mathcal{\varepsilon}\cdot\textbf{x}
+$$
+}
+\item{pure tractions in the form:
+$$
+\textbf{t}|_{\partial\Omega}=\mathcal{L}\cdot\textbf{n}
+$$
+}
+\end{enumerate}
+
+\section{Homogenization in Graphics}
+
+There's not much literature about homogenization in graphics
+community. To the best of my knowledge, \cite{Kharevych:2009} is one
+of the few. Despite the lack of attention, homogenization is one
+essential approach for fast simulation of inhomogeneous deformable
+materials. \cite{Kharevych:2009} introduced the techniques in
+engineering to computer graphics and addressed the homogenization of
+linear elasticity. We want to fill the blank in homogenization of
+nonlinear materials so that homogenization techniques can be applied
+to model large deformation.
+
+The basic idea of \cite{Kharevych:2009} is as follows:
+
+\begin{enumerate}
+\item{Compute a set of displacements of the fine elements by solving a
+  static boundary value problem:
+$$
+\begin{cases}
+\textrm{div}(\mb{C}:\epsilon(\mb{h}_{\alpha\beta}))=0\qquad
+\textrm{inside}\quad \mb{\Omega}\\
+(\mb{C}:\epsilon(\mb{h}_{\alpha\beta}))\cdot \mb{n}=\epsilon(x_\alpha\textrm{\textbf{e}}_\beta)\cdot\mb{n}\qquad
+\textrm{for \textbf{x}} \in \partial \mb{\Omega}\\
+\end{cases}
+$$
+}
+\item{Apply the displacements on both fine elements and coarse
+    elements, displacements of the coarse elements are
+    interpolated from the fine elements. Solve for the material
+    parameters of coarse elements by building energy equality
+    between two scales under these displacements:
+$$
+\int_V\mb{\epsilon(u)}:\mb{C}:\mb{\epsilon(u)}dV=\int_{\mathbb{V}}\mb{\mathbb{\epsilon(U)}}:\mb{\mathbb{C}}:\mb{\mathbb{\epsilon(U)}}d\mathbb{V} 
+$$
+$\mb{ROMAN}$ characters and $\mathbb{BLACKBOARD}$ are quantities
+on different scales respectively.
+}
+\item{Simulate with the coarse elements.}
+\end{enumerate}
+
+\section{Nonlinear Homogenization}
+
+\cite{Kharevych:2009} has only addressed linear materials. Hence it
+cannot accurately approximate the behavior of heterogeneous objects in
+nonlinear deformation region. That's when we come to play. \textbf{The goal of
+our method is to accurately simulate large deformation of
+heterogeneous objects using very coarse simulation elements. By ``accurate'' we mean the result of ours is
+visually identical to that of high-resolution reference simulation.}
+
+In order to derive material properties of the coarse elements from
+high-resolution ones, we
+need to address the following three issues.
+\begin{enumerate}
+\item{A general nonlinear constitutive model.}
+\item{The equation that bridges two scales.}
+\item{Characteristic loads of deformation.}
+\end{enumerate}
+
+\subsection{Nonlinear Constitutive Model}
+The nonlinear constitutive models that we have encountered in graphics
+(StVK, neoHookean, etc.) are isotropic. We need a more general nonlinear
+constitutive model, because each coarse element is approximation of
+fine elements that occupy the same space and the overall deformation
+of the fine elements may exhibits anisotropy.
+
+We express constitutive model with the second Piola-Kirchhoff stress $\mb{S}$ and
+the Green strain $\mb{E}$. $\mb{S}$ is represented as polynomial
+function of $\mb{E}$:
+$$
+\mb{S}=\mb{C}:\mb{E}+\bar{\mb{C}}::\mb{E}\otimes{\mb{E}}+\hat{\mb{C}}:::\mb{E}\otimes{\mb{E}}\otimes{\mb{E}}+\cdots
+$$
+
+where $:$ is double contraction and $\otimes$ is tensor product. This
+polynomial form is in fact Taylor expansion of $\mb{S}$ at point
+$\mb{E}=\mb{0}$.
+
+If we use the first-order term, then it is the extension of StVK to
+anisotropy:
+$$
+\mb{S}=\mb{C}:\mb{E}
+$$
+
+There are 21 independent variables in $\mb{C}$ for general anisotropic
+materials while for StVK there are only 2. The first-order form
+constitutive model captures geometric nonlinearity because nonlinear
+Green strain $\mb{E}$ is employed. Material nonlinearity is not
+captured because the stress $\mb{S}$ and strain $\mb{E}$ are related
+by a constant tensor $\mb{C}$. Nevertheless, I guess this linear form 
+suffices to model large deformation of anisotropic nonlinear materials
+as StVK model has been used extensively in graphics community to
+simulate large deformation.
+
+We can use higher-order approximation to model material
+nonlinearity. For instance,
+$$
+\mb{S}=\mb{C}:\mb{E}+\bar{\mb{C}}::\mb{E}\otimes{\mb{E}}+\hat{\mb{C}}:::\mb{E}\otimes{\mb{E}}\otimes{\mb{E}}
+$$
+
+$\mb{C}$ is a 4th-order tensor with 21 independent variables,
+$\bar{\mb{C}}$ is a 6th-order tensor with 56 independent variables,
+and $\hat{\mb{C}}$ is a 8th-order tensor with 126 independent
+variables. Hence we need to derive 21+56+126=203 material parameters
+in total.
+\subsection{Energy Equality}
+
+The material parameters at coarse level are derived from given
+parameters at the fine scale. As before, we bridge the two scales with
+equality of deformation energy under some deformation loads. The
+second Piola-Kirchhoff stress $\mb{S}$ and the Green strain rate
+$\mb{\dot{E}}$ are work conjugate:
+$$
+\dot{W}=\int_V\mb{S}:\dot{\mb{E}}dV
+$$
+
+where $\dot{W}$ is the rate of work done by the stress, $V$ is
+the rest volume of the object. We consider only hyperelastic
+materials, then:
+$$
+W=\int_V\mb{S}:\mb{E}dV
+$$
+
+The energy equality between different scales is as follows, it can be
+considered as nonlinear extension of the Hill's condition:
+$$
+\int_V\mb{S}:\mb{E}dV=\int_{\mathbb{V}}\mb{\mathbb{S}}:\mb{\mathbb{E}}d\mathbb{V}
+$$
+
+Again, $\mb{ROMAN}$ characters and $\mathbb{BLACKBOARD}$ are quantities
+on different scales respectively.
+
+\subsection{Characteristic Deformation Modes}
+
+Ideally the energy equality is true for all deformations of the
+object such that the coarse elements correctly reproduce the behaviors
+of fine elements. However the space of possible deformation is
+significant, the best we can hope is to enforce this equality only on
+a few displacements that can represent the characteristic deformation
+of the object. \cite{Kharevych:2009} used what they call ``harmonic
+displacements'' as the deformation load, which in essence is the
+result of linear traction on the boundary of the object. These
+displacements are only characteristics of linear deformation, thus not
+suitable for nonlinear problem. We need a set of displacements which
+can represent typical deformations of the object, including nonlinear
+large deformation.
+
+What come to my mind are the deformation modes of modal analysis. In linear modal analysis, the deformation modes are
+eigenvectors of the object's stiffness matrix:
+$$
+\mb{K}\mb{\Psi}=\lambda\mb{M}\mb{\Psi}
+$$
+
+The deformation modes can be regarded as the basis of the object's
+deformation space:
+$$
+\mb{u}(p)=p_1\psi_1+p_2\psi_2+p_3\psi_3+\cdots
+$$
+
+Linear deformation modes cannot be used to describe nonlinear
+deformation. \cite{Barbic:2005} extends linear modes by appending the
+directional derivative of the modes $\psi_i (1\leq i \leq k)$ with
+respect to the factors $p_j (1\leq j \leq k)$ to the set of basis:
+$$
+\Phi_{ij}=\frac{\partial}{\partial{p_j}}\psi_i(\psi_lp_l)_{_{|p=0^k}}
+$$
+
+The newly added modes are named ``modal derivatives''. The new set of
+deformation modes can describe nonlinear
+deformation. \cite{Barbic:2005} uses the modal modes for the purpose
+of model reduction while we enforce the modes on the objects and
+derive material parameters of the coarse elements from the energy
+equality between different scales under these deformations. The modes
+can well approximate the space of typical deformations, including
+nonlinear large deformation. Each independent loading yields 6
+different stress components in $\mb{S}$ and hece provides 6 equations
+for the material parameters in constitutive model. We must provide
+enough number of loads to solve for the material parameters. The
+constitutive model is linear with respect to the parameters, thus
+results in a linear system to solve.
+
+\subsection{Algorithm Outline}
+
+Here we outline our algorithm, all the work are done as precomputation
+for the simulation and the result are element-wise material parameters
+at coarse level. At run-time, we can simulate objects composed of
+nonlinear heterogeneous materials undergoing large deformation,
+probably real-time.
+\\
+\\
+\noindent{\textbf{\large{Algorithm:}}}
+
+\begin{enumerate}
+\item{Compute the set of linear modal modes and modal derivatives.}
+\item{Construct the linear system of material parameters by enforcing
+    the loads and energy equality, solve for the material parameters.}
+\item{Simulate with coarse elements using the element-wise material parameters.}
+\end{enumerate} 
+
+\bibliographystyle{eg-alpha}
+\bibliography{ref}
+
+\end{document}
