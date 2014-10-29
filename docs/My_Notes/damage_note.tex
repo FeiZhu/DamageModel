@@ -26,6 +26,127 @@
 
 \section{Basic Concepts}
 
+\subsection{Damage State}
+
+We represent the damage state in the material with a second-order
+tensor $\bm{D}$. It is defined by a linear transformation from the
+vector $\bm{n}dA$ in the current damaged configuration into
+$\tilde{\bm{n}}d\tilde{A}$ in the fictitious undamaged configuration
+that is mechanically equivalent:
+$$
+\tilde{\bm{n}}d\tilde{A} = (\bm{I}-\bm{D})\bm{n}dA,
+$$
+where $\bm{n}dA$ and $\tilde{\bm{n}}d\tilde{A}$ are the surface
+elements in the two configurations. The damage variable characterizes
+the net area reduction caused by damage of material.
+
+\subsection{Effective Stress Tensor and Damage Effect Tensor}
+
+$$
+\sigma(\bm{n}dA) = \tilde{\sigma}(\tilde{\bm{n}}d\tilde{A}) 
+                 = \tilde{\sigma}(\bm{I}-\bm{D})(\bm{n}dA).
+$$
+From this, the effective stress tensor $\tilde{\sigma}$ is given by:
+$$
+\tilde{\sigma} = (\bm{I}-\bm{D})^{-1}\sigma.
+$$
+The effective stress tensor defined above is asymmetric, it is usually
+inconvenient to use it in the formulation of constitutive and
+evolution equations. Different schemes of symmetrization have been
+proposed, which can be expressed in a unified form as:
+$$
+\tilde{\sigma} = \mathbb{M}(\bm{D}):\sigma,
+$$
+where $\mathbb{M}(\bm{D})$ is a fourth-order tensor-valued tensor
+function which transforms the stress tensor into corresponding
+effective stress tensor, and is called a damage effect tensor.
+
+It is often convenient to express tensors in the form of the matrices
+of their components, and the to execute the tensor operation as a
+matrix calculus. According to the Voigt notation, the second-order
+symmetric stress tensor $\sigma$ and the related effective stress
+tensor $\tilde{\sigma}$ are expressed by the column vectors of
+six-dimension:
+$$
+[\sigma] = [\sigma_{11}\ \sigma_{22}\ \sigma_{33}\ \sigma_{23}\
+\sigma_{12}\ \sigma_{13}]^T
+$$
+$$
+[\tilde{\sigma}] = [\tilde{\sigma}_{11}\ \tilde{\sigma}_{22}\
+\tilde{\sigma}_{33}\ \tilde{\sigma}_{23}\ \tilde{\sigma}_{12}\ \tilde{\sigma}_{13}]^T
+$$
+Considering the symmetry of stress tensors, the damage effect tensor
+is represented as a six by six matrix $[\bm{M}]$. Then:
+$$
+[\tilde{\sigma}] = [\bm{M}][\sigma].
+$$
+$[\bm{M}]$ is a
+diagonal matrix if the principal directions of the damage tensor
+$\bm{D}$ are taken as the orthonormal basis of the coordinate
+system. Suppose $[\bm{Q}]$ is the transformation matrix from principal
+basis $\{\bm{n}_1,\bm{n}_2,\bm{n}_3\}$ to arbitrary basis $\{\bm{n}_1^{'},\bm{n}_2^{'},\bm{n}_3^{'}\}$, then:
+$$
+ [\tilde{\sigma}^{'}] = [\bm{Q}][\tilde{\sigma}] =
+ [\bm{Q}][\bm{M}][\sigma] = [\bm{Q}][\bm{M}][\bm{Q}]^{-1}[\sigma^{'}] = [\bm{M}^{'}][\sigma^{'}] 
+$$
+$$
+[\bm{M}^{'}] = [\bm{Q}][\bm{M}][\bm{Q}]^{-1}
+$$
+
+\subsection{Effective Strain Tensor}
+
+The effective strain tensor is defined according to the hypothesis of
+equivalence of the strain energy, i.e., the strain energy of the
+damaged material is equivalent to the fictitious undamaged material:
+$$
+\epsilon = \frac{\partial{W(\sigma,\bm{D})}}{\partial{\sigma}}
+         = \frac{\partial{W_o(\tilde{\sigma})}}{\partial{\sigma}}
+         =
+         \frac{\partial{W_o(\tilde{\sigma})}}{\partial{\tilde{\sigma}}}:
+           \frac{\partial{\tilde{\sigma}}}{\partial{\sigma}}
+         = \mathbb{M}^T(\bm{D}):\tilde{\epsilon}
+$$
+Hence,
+$$
+\tilde{\epsilon} = \mathbb{M}^{-T}(\bm{D}):\epsilon
+$$
+
+\section{The Thermodynamic Approach}
+
+\subsection{Finite Deformation Theory}
+
+The effective stress tensor and the effective strain tensor expressed
+in the finite deformation theory are:
+$$
+\tilde{\bm{S}} = \mathbb{M}(\bm{D}):\bm{S}
+$$
+$$
+\tilde{\bm{E}} = \mathbb{M}^{-T}(\bm{D}):\bm{E}
+$$
+$\bm{E}$ and $\bm{S}$ are respectively the Green-Lagrange strain
+tensor and the second Piola-Kirchhoff stress tensor.
+
+\subsection{Plasticity Model}
+
+We employ the additive decomposition of the Green-Lagrange strain tensor
+to describe plasticity in the field of large deformation:
+$$
+\bm{E}(\bm{X},t) = \bm{E}^e(\bm{X},t)+\bm{E}^p(\bm{X},t)
+$$
+
+\subsection{Helmholtz Free Energy}
+
+The Helmholtz free energy $\Psi$ denotes the free energy per unit mass
+in the material. We assume it consists of the free energy
+$\Psi^{e}$ caused by the elastic deformation, the energy
+$\Psi^{p}$ due to plastic deformation, and of the free energy
+$\Psi^{\bm{D}}$ related to damage.
+$$
+\Psi(\bm{E}^e,\bm{E}^p,\bm{D},\beta) = \Psi^{e}(\bm{E}^e,\bm{D}) + \Psi^{p}(\bm{E}^p,\bm{D}) + \Psi^{\bm{D}}(\beta)
+$$
+
+\subsection{Dissipation Potentials of Plastic Deformation and Damage}
+
 \bibliographystyle{eg-alpha}
 \bibliography{ref}
 
